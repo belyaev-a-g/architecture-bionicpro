@@ -14,7 +14,7 @@ const keycloak = new Keycloak(keycloakConfig);
 export const initOptions = {
   onLoad: 'check-sso',                      // perform a silent session 
   pkceMethod: 'S256',                       // enforce PKCE for extra SPA security
-  silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
+  silentCheckSsoRedirectUri: `${window.location.origin}/silent_pkce.html`,
 };
 
 const App: React.FC = () => {
