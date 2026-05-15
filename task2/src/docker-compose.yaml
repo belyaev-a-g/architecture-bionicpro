@@ -96,13 +96,13 @@ services:
       - "636:636"
   crm_db: 
     image: postgres:14
+    container_name: bionicpro-crm-postgres
     environment:
       POSTGRES_DB: crm_db
       POSTGRES_USER: crm_user
       POSTGRES_PASSWORD: crm_password
     volumes:
         - ./crm-db:/docker-entrypoint-initdb.d
-        - ./postgres-crm-data:/var/lib/postgresql/data
     ports:
       - "5444:5432"
   olap_db:
