@@ -3,7 +3,7 @@ version: '3.8'
 services:
   keycloak_db:
     image: postgres:14
-    container_name: bionicpro-postgres
+    container_name: bionicpro-keycloak-postgres
     hostname: postgres
     environment:
       POSTGRES_DB: keycloak_db
@@ -53,6 +53,22 @@ services:
     depends_on:
       keycloak_db:
         condition: service_healthy
+  telemetry_db:
+    image: postgres:14
+    container_name: bionicpro-telemetry-postgres
+    environment:
+      POSTGRES_DB: telemetry_db
+      POSTGRES_USER: telemetry_user
+      POSTGRES_PASSWORD: telemetry_password
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./telemetry/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U telemetry_user -d telemetry_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
   frontend:
     build:
       context: ./frontend
