@@ -6,6 +6,10 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json ./
 
+# Delete me
+RUN npm config set proxy http://172.16.0.250:4343
+RUN npm config set https-proxy http://172.16.0.250:4343
+
 # Install dependencies
 RUN npm ci
 

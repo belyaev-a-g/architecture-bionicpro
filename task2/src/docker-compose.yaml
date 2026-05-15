@@ -3,6 +3,8 @@ version: '3.8'
 services:
   keycloak_db:
     image: postgres:14
+    container_name: bionicpro-postgres
+    hostname: postgres
     environment:
       POSTGRES_DB: keycloak_db
       POSTGRES_USER: keycloak_user
@@ -11,8 +13,15 @@ services:
       - ./postgres-keycloak-data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak_user -d keycloak_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
   keycloak:
     image: quay.io/keycloak/keycloak:21.1
+    container_name: bionicpro-keycloak
+    hostname: keycloak
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -27,8 +36,23 @@ services:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
     ports:
       - "8080:8080"
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - |
+          exec 3<>/dev/tcp/127.0.0.1/9000;
+          echo -e "GET /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n" >&3;
+          if cat <&3 | grep -q "\"status\": \"UP\""; then
+            exit 0
+          else
+            exit 1
+          fi
+      interval: 30s
+      timeout: 10s
+      retries: 3 
     depends_on:
-      - keycloak_db
+      keycloak_db:
+        condition: service_healthy
   frontend:
     build:
       context: ./frontend
@@ -42,7 +66,8 @@ services:
       REACT_APP_KEYCLOAK_CLIENT_ID: reports-frontend
   openldap:
     image: osixia/openldap:1.5.0
-    container_name: openldap
+    container_name: bionicpro-openldap
+    hostname: openldap
     command: --copy-service
     volumes:
       - ./ldap/config.ldif:/container/service/slapd/assets/config/bootstrap/ldif/50-bootstrap.ldif
