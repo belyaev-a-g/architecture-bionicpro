@@ -23,3 +23,7 @@ docker compose up -d telemetry_db
 docker compose down telemetry_db
 docker compose logs telemetry_db
 
+
+# Полная пересборка и перезапуск
+docker compose down && docker compose build --no-cache && docker compose up -d
+
