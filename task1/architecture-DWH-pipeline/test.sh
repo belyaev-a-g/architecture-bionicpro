@@ -2,6 +2,9 @@
 docker compose up -d clickhouse
 docker compose exec -it clickhouse clickhouse-client -u airflow --password airflow -d olap
 SELECT * FROM customer_prostheses;
+# Ручная заливка данных
+docker compose exec -it clickhouse bash
+clickhouse-client --query="INSERT INTO olap.bionicpro_analytics FORMAT CSV" < /tmp/data.csv
 
 
 docker compose up -d telemetry_db
