@@ -72,7 +72,7 @@ def merge_and_load_to_clickhouse(**kwargs):
 
 with DAG('bionic_pro_clickhouse_connect',
          default_args=default_args,
-         schedule_interval='@once',
+         schedule_interval='@daily', # По заданию - добавим расписание - ежедневно
          catchup=False) as dag:
 
     get_telemetry = PythonOperator(
