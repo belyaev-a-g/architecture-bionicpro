@@ -15,6 +15,7 @@ select c.full_name, p.device_id, p.model_name from prostheses p JOIN customers c
 
 # Работа с БД телеметрии
 docker exec -it bionicpro-telemetry-postgres bash
+psql -U telemetry_user -d telemetry_db
 docker compose up -d telemetry_db
 docker compose down telemetry_db
 docker compose logs telemetry_db

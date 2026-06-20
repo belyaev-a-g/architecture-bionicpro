@@ -189,7 +189,8 @@ services:
       POSTGRES_USER: crm_user
       POSTGRES_PASSWORD: crm_password
     volumes:
-      - ./crm/init:/docker-entrypoint-initdb.d
+      - ./crm/init/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./crm/init/data.csv:/tmp/data.csv
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U crm_user -d crm_db"]
       interval: 10s
