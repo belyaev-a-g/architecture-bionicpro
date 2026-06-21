@@ -89,9 +89,9 @@ def health_check(response: Response):
         if client:
             client.close()
 
-# 2. РУЧКА: Получение отчетов по логину
 @app.get("/reports")
-def get_reports(claims: dict[str, Any] = Depends(get_current_claims)) -> dict[str, Any]:
+# Изменили аннотацию возвращаемого типа на list[dict[str, Any]] или просто list
+def get_reports(claims: dict[str, Any] = Depends(get_current_claims)) -> list[dict[str, Any]]:
     login = claims.get("preferred_username")
     subject = claims.get("sub")
 
@@ -101,64 +101,38 @@ def get_reports(claims: dict[str, Any] = Depends(get_current_claims)) -> dict[st
     client = None
     try:
         client = get_clickhouse_client()
-        
-        # Модификатор FINAL гарантирует получение только актуальных (схлопнутых) данных
+
         query = """
-        SELECT 
-            login, first_name, last_name, e_mail, id_device, model, 
+        SELECT
+            login, first_name, last_name, e_mail, id_device, model,
             toString(timestamp) as timestamp, battery_level
         FROM olap.bionicpro_analytics FINAL
         WHERE login = {login_param:String}
         ORDER BY timestamp DESC
         """
-        
+
         result = client.query(query, parameters={'login_param': login})
-        
+
         if not result.result_rows:
             return []
-            
-        # Формируем JSON ответ
-        return [dict(zip(result.column_names, row)) for row in result.result_rows]
+
+        # Формируем JSON ответ, принудительно превращая UUID в str
+        report_data = []
+        for row in result.result_rows:
+            row_dict = dict(zip(result.column_names, row))
+            # ПРЕОБРАЗОВАНИЕ ТИПА: превращаем объект UUID в строку
+            if "id_device" in row_dict:
+                row_dict["id_device"] = str(row_dict["id_device"])
+            report_data.append(row_dict)
+
+        print(f"Safe result for JSON serialization: {report_data}")
+        return report_data
 
     except Exception as e:
         logger.error(f"Error fetching report for login {login}: {str(e)}")
+        print("It's my 500 ERROR")
         raise HTTPException(status_code=500, detail="Internal server error")
-    
+
     finally:
         if client:
             client.close()
-
-
-# 3. Old РУЧКА: Получение отчетов по логину
-@app.get("/reports_old")
-def get_report_by_login(login: str = Query(..., description="Логин пользователя для поиска телеметрии")):
-    client = None
-    try:
-        client = get_clickhouse_client()
-        
-        # Модификатор FINAL гарантирует получение только актуальных (схлопнутых) данных
-        query = """
-        SELECT 
-            login, first_name, last_name, e_mail, id_device, model, 
-            toString(timestamp) as timestamp, battery_level
-        FROM olap.bionicpro_analytics FINAL
-        WHERE login = {login_param:String}
-        ORDER BY timestamp DESC
-        """
-        
-        result = client.query(query, parameters={'login_param': login})
-        
-        if not result.result_rows:
-            return []
-            
-        # Формируем JSON ответ
-        return [dict(zip(result.column_names, row)) for row in result.result_rows]
-
-    except Exception as e:
-        logger.error(f"Error fetching report for login {login}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-    
-    finally:
-        if client:
-            client.close()
-
