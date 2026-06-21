@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Копируем и устанавливаем только необходимые для API зависимости
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt  --proxy http://172.16.0.250:4343
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем код приложения
 COPY ./app ./app
