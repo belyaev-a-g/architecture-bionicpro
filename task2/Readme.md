@@ -11,8 +11,8 @@ crm_db - имитирует БД с CRM.
 telemetry_db - имитируют БД с телеметрией.  
 OLTP заполняются данными при старте из файлов data.csv.  
 
-Airflow DAG вычитывает данные с этих БД и сохраняет в OLAP БД. 
-В качестве OLAP используется clickhouse. Изначально в clickhouse тоже есть немного данных, но они не содержат нужных логинов, которые есть в keycloak.  
+Airflow DAG вычитывает данные с этих БД и сохраняет в OLAP БД.   
+В качестве OLAP используется clickhouse.  Изначально в clickhouse тоже есть немного данных, но они не содержат нужных логинов, которые есть в keycloak.  
 
 Ежедневное расписание реализовано с помощью пресета @daily:
 ```
@@ -23,7 +23,7 @@ with DAG('bionic_pro_clickhouse_connect',
 ```
 
 ## Задача 3. Создайте бэкенд-часть приложения для API.
-Бэкенд реализован на питоне, используется FastAPI(backend:/container_name: bionicpro-report-service)
+Бэкенд реализован на питоне, используется FastAPI(backend:/container_name: bionicpro-report-service).      
 Endpoint /reports получает токен и проверяет его.  
 По имени пользователя из токена происходит чтение из OLAP(clickhouse) таблицы и отдаёт её в фронт.  
 
@@ -32,14 +32,10 @@ Endpoint /reports получает токен и проверяет его.
 Результаты работы отображены в скринах.  
 
 ## Задача 5. Добавьте в UI кнопку получения отчёта и вызова эндпоинта его генерации.
-Кнопка UI уже была в [Yandex-Practicum/architecture-bionicpro]<https://github.com/Yandex-Practicum/architecture-bionicpro/tree/PPROD-9631/frontend/src/components>.  
+Кнопка UI уже была в [Yandex-Practicum/architecture-bionicpro](https://github.com/Yandex-Practicum/architecture-bionicpro/tree/PPROD-9631/frontend/src/components).  
 Нужно было настроить на отображение данных, отправляемых бэкендом.  
 
-
-
-
-
-Скрины с данными:  
+## Скрины с данными:  
 
 Попытка получить доступ неавторизованным пользователем:  
 ![back](images/backend1_unauthorized.png)
