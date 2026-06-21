@@ -264,9 +264,9 @@ services:
       CLICKHOUSE_USERNAME: airflow
       CLICKHOUSE_PASSWORD: airflow
       REPORTS_TABLE: bionicpro_analytics
-#      KEYCLOAK_JWKS_URL: http://host.docker.internal:8080/realms/reports-realm/protocol/openid-connect/certs
-#      KEYCLOAK_EXPECTED_ISSUER: http://localhost:8080/realms/reports-realm
-#      ALLOWED_ORIGINS: http://localhost:3000
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/reports-realm/protocol/openid-connect/certs
+      KEYCLOAK_EXPECTED_ISSUER: http://keycloak:8080/realms/reports-realm
+      ALLOWED_ORIGINS: http://localhost:3000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -277,8 +277,8 @@ services:
     depends_on:
       clickhouse:
         condition: service_healthy
-#      keycloak:
-#        condition: service_started
+      keycloak:
+        condition: service_started
     networks:
       - dag_sample
 
