@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useKeycloak } from '@react-keycloak/web';
 
-// 1. Описываем интерфейс данных, которые возвращает наш FastAPI из ClickHouse
+// 1. Убеждаемся, что интерфейс описывает абсолютно все поля из ClickHouse
 interface TelemetryReport {
   login: string;
   first_name: string;
@@ -17,8 +17,6 @@ const ReportPage: React.FC = () => {
   const { keycloak, initialized } = useKeycloak();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  //# 2. Добавляем состояние для хранения массива данных отчета
   const [reportData, setReportData] = useState<TelemetryReport[]>([]);
 
   const downloadReport = async () => {
@@ -27,8 +25,7 @@ const ReportPage: React.FC = () => {
       return;
     }
 
-    //# 3. Достаем логин текущего пользователя из JWT-токена Keycloak
-    //# По умолчанию Keycloak хранит логин в поле 'preferred_username'
+    // Достаем логин из токена Keycloak
     const userLogin = keycloak.idTokenParsed?.preferred_username;
     
     if (!userLogin) {
@@ -40,7 +37,6 @@ const ReportPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      //# 4. Формируем URL с обязательным query-параметром ?login=...
       const url = `${process.env.REACT_APP_API_URL}/reports?login=${encodeURIComponent(userLogin)}`;
 
       const response = await fetch(url, {
@@ -54,7 +50,6 @@ const ReportPage: React.FC = () => {
         throw new Error(`Server error: ${response.status} ${response.statusText}`);
       }
 
-      //# 5. Парсим JSON и сохраняем его в состояние
       const data: TelemetryReport[] = await response.json();
       setReportData(data);
 
@@ -82,10 +77,13 @@ const ReportPage: React.FC = () => {
     );
   }
 
+  // Берем первого попавшегося клиента из массива для отображения общей карточки пользователя
+  const clientInfo = reportData.length > 0 ? reportData[0] : null;
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
-      <div className="w-full max-w-4xl p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Usage Reports</h1>
+      <div className="w-full max-w-6xl p-8 bg-white rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">Analytics & Telemetry Dashboard</h1>
 
         <div className="flex justify-center mb-6">
           <button
@@ -95,7 +93,7 @@ const ReportPage: React.FC = () => {
               loading ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            {loading ? 'Generating Report...' : 'Load Report'}
+            {loading ? 'Generating Report...' : 'Load Full Report'}
           </button>
         </div>
 
@@ -105,28 +103,56 @@ const ReportPage: React.FC = () => {
           </div>
         )}
 
+        {/* БЛОК ПАНЕЛИ ИНФОРМАЦИИ О КЛИЕНТЕ */}
+        {clientInfo && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-700">
+            <div>
+              <span className="block text-xs font-semibold uppercase text-gray-400">User Login</span>
+              <span className="font-mono text-gray-900 font-bold">{clientInfo.login}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold uppercase text-gray-400">Full Name</span>
+              <span className="text-gray-900">{clientInfo.first_name} {clientInfo.last_name}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold uppercase text-gray-400">Contact Email</span>
+              <span className="text-gray-900 font-medium">{clientInfo.e_mail}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold uppercase text-gray-400">Total Records Found</span>
+              <span className="text-gray-900 font-bold">{reportData.length}</span>
+            </div>
+          </div>
+        )}
+
+        {/* ШИРОКАЯ ТАБЛИЦА С ПОЛНЫМИ ДАННЫМИ */}
         {reportData.length > 0 && (
-          <div className="mt-6 overflow-x-auto">
-            <h2 className="text-lg font-semibold mb-3 text-gray-700">
-              Telemetry History for: <span className="font-bold text-blue-600">{reportData[0].login}</span>
-            </h2>
-            <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold">
+          <div className="mt-4 overflow-x-auto">
+            <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+              <thead className="bg-gray-100 text-gray-700 uppercase text-xs font-bold tracking-wider">
                 <tr>
+                  <th className="py-3 px-4 text-left border-b">Login</th>
+                  <th className="py-3 px-4 text-left border-b">First Name</th>
+                  <th className="py-3 px-4 text-left border-b">Last Name</th>
+                  <th className="py-3 px-4 text-left border-b">Email</th>
                   <th className="py-3 px-4 text-left border-b">Device ID</th>
                   <th className="py-3 px-4 text-left border-b">Model</th>
                   <th className="py-3 px-4 text-left border-b">Timestamp</th>
-                  <th className="py-3 px-4 text-center border-b">Battery Level</th>
+                  <th className="py-3 px-4 text-center border-b">Battery</th>
                 </tr>
               </thead>
-              <tbody className="text-gray-600 text-sm">
+              <tbody className="text-gray-600 text-sm divide-y divide-gray-100">
                 {reportData.map((row, index) => (
-                  <tr key={index} className="hover:bg-gray-50 border-b">
-                    <td className="py-3 px-4 font-mono text-xs">{row.id_device}</td>
-                    <td className="py-3 px-4">{row.model}</td>
-                    <td className="py-3 px-4">{row.timestamp}</td>
+                  <tr key={index} className="hover:bg-gray-50 transition-colors">
+                    <td className="py-3 px-4 font-mono text-xs font-semibold text-gray-900">{row.login}</td>
+                    <td className="py-3 px-4">{row.first_name}</td>
+                    <td className="py-3 px-4">{row.last_name}</td>
+                    <td className="py-3 px-4 text-xs font-medium">{row.e_mail}</td>
+                    <td className="py-3 px-4 font-mono text-xs text-gray-400">{row.id_device}</td>
+                    <td className="py-3 px-4 font-medium text-blue-600">{row.model}</td>
+                    <td className="py-3 px-4 text-xs text-gray-500 whitespace-nowrap">{row.timestamp}</td>
                     <td className="py-3 px-4 text-center">
-                      <span className={`px-2 py-1 rounded text-xs font-bold ${
+                      <span className={`inline-block w-14 py-1 rounded text-xs font-bold ${
                         row.battery_level > 50 ? 'bg-green-100 text-green-800' :
                         row.battery_level > 20 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
                       }`}>
@@ -141,7 +167,7 @@ const ReportPage: React.FC = () => {
         )}
 
         {!loading && reportData.length === 0 && !error && (
-          <p className="text-center text-gray-500 mt-4">No telemetry data found.</p>
+          <p className="text-center text-gray-500 mt-4">No report data loaded yet.</p>
         )}
       </div>
     </div>
