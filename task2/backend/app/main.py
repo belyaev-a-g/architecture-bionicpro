@@ -56,9 +56,8 @@ def get_current_claims(credentials: HTTPAuthorizationCredentials = Security(secu
             issuer=os.environ["KEYCLOAK_EXPECTED_ISSUER"],
             options={"verify_aud": False},
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(f"get invalid token: {exc}")
-        print(f"WTF?")
         raise HTTPException(status_code=401, detail=f"Invalid token: {exc}") from exc
 
 def get_clickhouse_client():

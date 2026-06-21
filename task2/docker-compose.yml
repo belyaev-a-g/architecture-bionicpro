@@ -265,7 +265,7 @@ services:
       CLICKHOUSE_PASSWORD: airflow
       REPORTS_TABLE: bionicpro_analytics
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/reports-realm/protocol/openid-connect/certs
-      KEYCLOAK_EXPECTED_ISSUER: http://keycloak:8080/realms/reports-realm
+      KEYCLOAK_EXPECTED_ISSUER: http://localhost:8080/realms/reports-realm
       ALLOWED_ORIGINS: http://localhost:3000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
